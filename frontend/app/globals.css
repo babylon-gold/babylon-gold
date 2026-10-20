@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gold-50: #fef9f0;
+  --gold-100: #fdf3e1;
+  --gold-200: #fbe7c3;
+  --gold-300: #f8dba5;
+  --gold-400: #f5c967;
+  --gold-500: #f2b631;
+  --gold-600: #d9a02a;
+  --gold-700: #b08a23;
+  --gold-800: #88711c;
+  --gold-900: #615815;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html[lang="ar"] {
+  direction: rtl;
+}
+
+html[lang="en"] {
+  direction: ltr;
+}
+
+body {
+  font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.font-cairo {
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Dark theme colors */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  @apply bg-slate-900 text-slate-100;
+}
+
+/* Card styles */
+.card {
+  @apply bg-slate-800 border border-slate-700 rounded-lg shadow-lg;
+}
+
+.card-header {
+  @apply p-4 border-b border-slate-700;
+}
+
+.card-body {
+  @apply p-4;
+}
+
+/* Button styles */
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-gold-500 text-slate-900 hover:bg-gold-600;
+}
+
+.btn-secondary {
+  @apply bg-slate-700 text-slate-100 hover:bg-slate-600;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.badge-success {
+  @apply bg-emerald-500/20 text-emerald-300;
+}
+
+.badge-warning {
+  @apply bg-amber-500/20 text-amber-300;
+}
+
+.badge-danger {
+  @apply bg-red-500/20 text-red-300;
+}
+
+.badge-info {
+  @apply bg-blue-500/20 text-blue-300;
+}
+
+/* Chart styles */
+.chart-container {
+  @apply relative w-full h-full;
+}
+
+/* Loading spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse animation */
+.pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* RTL adjustments */
+html[dir="rtl"] .mr-2 {
+  margin-right: auto;
+  margin-left: 0.5rem;
+}
+
+html[dir="rtl"] .ml-2 {
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+html[dir="rtl"] .pl-4 {
+  padding-left: auto;
+  padding-right: 1rem;
+}
+
+html[dir="rtl"] .pr-4 {
+  padding-right: auto;
+  padding-left: 1rem;
+}
