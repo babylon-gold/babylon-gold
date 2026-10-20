@@ -77,7 +77,7 @@ class SignalEngine:
     @staticmethod
     def _analyze_ema(indicators: IndicatorValues) -> Tuple[str, float]:
         """Analyze EMA structure and trend."""
-        if not indicators.ema_20 or not indicators.ema_50:
+        if not indicators.ema_20 or not indicators.ema_50 or not indicators.ema_200:
             return "NEUTRAL", 0.0
 
         evidence = []
@@ -127,7 +127,7 @@ class SignalEngine:
     @staticmethod
     def _analyze_atr(indicators: IndicatorValues, current_price: float) -> Tuple[str, float]:
         """Analyze volatility using ATR."""
-        if not indicators.atr:
+        if indicators.atr is None or indicators.atr <= 0:
             return "NEUTRAL", 0.0
 
         evidence = []
@@ -175,7 +175,7 @@ class SignalEngine:
     @staticmethod
     def _analyze_support_resistance(indicators: IndicatorValues, current_price: float) -> Tuple[str, float]:
         """Analyze support/resistance levels."""
-        if not indicators.support_level or not indicators.resistance_level:
+        if indicators.support_level is None or indicators.resistance_level is None:
             return "NEUTRAL", 0.0
 
         evidence = []
