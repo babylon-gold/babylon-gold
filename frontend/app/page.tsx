@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertCircle, Clock, TrendingUp, TrendingDown, Zap, BarChart3 } from 'lucide-react'
+import { AlertCircle, Clock } from 'lucide-react'
 import Dashboard from '@/components/Dashboard'
 import AnalysisPanel from '@/components/AnalysisPanel'
 import SignalCard from '@/components/SignalCard'

@@ -31,7 +31,7 @@ export default function EnhancedCandlestickChart({ timeframe }: EnhancedCandlest
   const loadData = async () => {
     try {
       setLoading(true)
-      const candles = await fetchCandlesWithIndicators(timeframe, 150)
+      const candles = await fetchCandlesWithIndicators(timeframe)
 
       console.log('Chart data received:', { isArray: Array.isArray(candles), length: candles?.length, type: typeof candles })
 

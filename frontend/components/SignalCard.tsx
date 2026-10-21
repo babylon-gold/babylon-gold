@@ -112,7 +112,7 @@ export default function SignalCard({ signal }: SignalCardProps) {
           <div className="pt-2 border-t border-slate-700">
             <p className="text-slate-400 text-xs uppercase mb-2">الأدلة</p>
             <ul className="space-y-1 text-xs text-slate-300">
-              {signal.evidence.map((item, idx) => (
+              {signal.evidence.map((item: string, idx: number) => (
                 <li key={idx} className="flex gap-2">
                   <span className="text-gold-400 flex-shrink-0">•</span>
                   <span>{item}</span>

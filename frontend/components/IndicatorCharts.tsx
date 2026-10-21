@@ -30,7 +30,7 @@ export default function IndicatorCharts({ timeframe }: IndicatorChartsProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const candles = await fetchCandlesWithIndicators(timeframe, 100)
+        const candles = await fetchCandlesWithIndicators(timeframe)
 
         // Response is already an array of CandleWithIndicators
         if (!Array.isArray(candles) || candles.length === 0) {

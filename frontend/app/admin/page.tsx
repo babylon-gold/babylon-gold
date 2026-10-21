@@ -99,6 +99,7 @@ export default function AdminPage() {
       const timer = setTimeout(() => setSuccessMessage(null), 5000)
       return () => clearTimeout(timer)
     }
+    return
   }, [successMessage])
 
   return (

@@ -30,7 +30,7 @@ export default function SignalsPage() {
     const loadSignals = async () => {
       try {
         setLoading(true)
-        const data = await fetchSignalsHistory(100)
+        const data = await fetchSignalsHistory()
         setSignals(data.signals || [])
         setTotalSignals(data.total_signals || 0)
       } catch (err) {

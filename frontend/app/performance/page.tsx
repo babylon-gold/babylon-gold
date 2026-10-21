@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertCircle, TrendingUp, TrendingDown } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { fetchPerformanceStats } from '@/lib/api'
 
 interface PerformanceData {
