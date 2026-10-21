@@ -2,6 +2,10 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
+export type Analysis = any
+export type Signal = any
+export type IndicatorValues = any
+
 export async function fetchAnalysis(timeframe: string) {
   try {
     const response = await fetch(`${API_URL}/analysis?timeframe=${timeframe}`)
