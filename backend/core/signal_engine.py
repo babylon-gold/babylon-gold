@@ -77,7 +77,7 @@ class SignalEngine:
     @staticmethod
     def _analyze_ema(indicators: IndicatorValues) -> Tuple[str, float]:
         """Analyze EMA structure and trend."""
-        if not indicators.ema_20 or not indicators.ema_50 or not indicators.ema_200:
+        if any(value is None for value in (indicators.ema_20, indicators.ema_50, indicators.ema_200)):
             return "NEUTRAL", 0.0
 
         evidence = []

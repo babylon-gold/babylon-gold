@@ -5,7 +5,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 
-from api.routes import data, signals, analysis, health
+from api.routes import data, signals, analysis, health, quote, historical, admin, notifications
+from core.scheduler import start_scheduler, stop_scheduler
 from core.config import settings
 
 # Configure logging
@@ -17,8 +18,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifecycle manager."""
     logger.info("Babylon AI Gold Intelligence backend starting...")
+
+    # Start scheduler on startup
+    try:
+        start_scheduler()
+    except Exception as e:
+        logger.warning(f"Could not start scheduler: {e}")
+
     yield
+
     logger.info("Shutting down...")
+    # Stop scheduler on shutdown
+    try:
+        stop_scheduler()
+    except Exception as e:
+        logger.warning(f"Error stopping scheduler: {e}")
 
 
 # Create FastAPI app
@@ -44,6 +58,10 @@ app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 app.include_router(data.router, prefix="/api/v1/data", tags=["data"])
 app.include_router(signals.router, prefix="/api/v1/signals", tags=["signals"])
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["analysis"])
+app.include_router(quote.router, prefix="/api/v1", tags=["quote"])
+app.include_router(historical.router, prefix="/api/v1/historical", tags=["historical"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
+app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["notifications"])
 
 
 @app.exception_handler(HTTPException)

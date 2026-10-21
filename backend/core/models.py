@@ -88,3 +88,65 @@ class HealthCheck(BaseModel):
     backend_version: str
     data_loaded: bool
     last_data_update: Optional[datetime] = None
+
+
+class GoldQuote(BaseModel):
+    """Validated Gold API spot reference quote (not an OHLC candle)."""
+    observed_at_utc: datetime
+    provider_updated_at_utc: datetime
+    symbol: str
+    currency: str
+    price_usd_per_troy_oz: float = Field(..., gt=0)
+    source: str
+    quote_type: str
+    age_seconds: int = Field(..., ge=0)
+    stale: bool
+
+
+class CandleWithIndicators(BaseModel):
+    """OHLC candle enriched with technical indicators."""
+    timestamp_utc: datetime
+    open: float = Field(..., gt=0)
+    high: float = Field(..., gt=0)
+    low: float = Field(..., gt=0)
+    close: float = Field(..., gt=0)
+    ema20: Optional[float] = None
+    ema50: Optional[float] = None
+    ema200: Optional[float] = None
+    rsi14: Optional[float] = None
+    atr14: Optional[float] = None
+    adx14: Optional[float] = None
+    interval: Literal["5min", "15min", "1h", "4h"]
+
+
+class SignalRecord(BaseModel):
+    """Historical signal record from analysis."""
+    signal_id: str
+    strategy: str
+    direction: str
+    created_utc: datetime
+    state: str
+    level: Optional[float] = None
+    invalidation: Optional[float] = None
+    confirmed_utc: Optional[datetime] = None
+    entry: Optional[float] = None
+    target: Optional[float] = None
+    result: str
+    r_multiple: Optional[float] = None
+    notes: str
+
+
+class EvaluatedSignal(BaseModel):
+    """Evaluated signal with performance metrics."""
+    strategy: str
+    direction: str
+    created_utc: datetime
+    confirmed_utc: Optional[datetime] = None
+    regime: str
+    session: str
+    year: int
+    risk_usd: Optional[float] = None
+    result: str
+    gross_r: Optional[float] = None
+    cost_r: Optional[float] = None
+    net_r: Optional[float] = None

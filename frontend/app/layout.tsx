@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Navigation from '@/components/Navigation'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
       </head>
       <body className="font-cairo bg-slate-900 text-slate-100 min-h-screen">
         <div className="flex flex-col h-screen">
+          <Navigation />
           <div className="flex-1 overflow-auto">
             {children}
           </div>

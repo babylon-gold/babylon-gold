@@ -37,6 +37,18 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 
 Verify: Open http://localhost:8000/docs in your browser
 
+### Use validated Twelve Data candles
+
+The default mode is `demo`, which loads the clearly labeled synthetic CSVs. After downloading and validating the Twelve Data files, start the backend in live mode from the same PowerShell window:
+
+```powershell
+cd D:\BabylonAI_GoldIntelligence
+$env:DATA_MODE = 'live'
+.\run-backend.ps1
+```
+
+Live mode loads `BabylonAI_Gold_Data_Starter\data\live\XAUUSD_*_twelvedata.csv` and excludes incomplete provider candles. Check `GET /api/v1/data/status` and confirm `mode` is `live` and each `sources` entry is `twelvedata.com`.
+
 ---
 
 ## 🎨 Start Frontend (2 minutes)

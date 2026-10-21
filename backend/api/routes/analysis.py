@@ -11,6 +11,13 @@ from core.risk_management import risk_manager
 router = APIRouter()
 
 
+def _format_value(value, decimals: int = 2, prefix: str = "") -> str:
+    """Format optional numeric values without turning missing data into errors."""
+    if value is None:
+        return "غ.م"
+    return f"{prefix}{value:.{decimals}f}"
+
+
 def _generate_arabic_summary(
     indicators,
     signal,
@@ -21,30 +28,30 @@ def _generate_arabic_summary(
     summary = f"""
 تحليل السوق - XAU/USD
 
-السعر الحالي: ${current_price:.2f}
+السعر الحالي: {_format_value(current_price, 2, '$')}
 
 🔍 المؤشرات الفنية:
 • المتوسطات المتحركة (EMA):
-  - EMA20: ${indicators.ema_20:.2f}
-  - EMA50: ${indicators.ema_50:.2f}
-  - EMA200: ${indicators.ema_200:.2f}
+  - EMA20: {_format_value(indicators.ema_20, 2, '$')}
+  - EMA50: {_format_value(indicators.ema_50, 2, '$')}
+  - EMA200: {_format_value(indicators.ema_200, 2, '$')}
 
-• مؤشر القوة النسبية (RSI): {indicators.rsi:.1f}
-• متوسط النطاق الحقيقي (ATR): {indicators.atr:.2f}
-• مؤشر الاتجاه (ADX): {indicators.adx:.1f if indicators.adx else 'غ.م'}
+• مؤشر القوة النسبية (RSI): {_format_value(indicators.rsi, 1)}
+• متوسط النطاق الحقيقي (ATR): {_format_value(indicators.atr, 2)}
+• مؤشر الاتجاه (ADX): {_format_value(indicators.adx, 1)}
 • نوع السوق: {indicators.market_regime or 'غير محدد'}
 
 📊 مستويات الدعم والمقاومة:
-• الدعم: ${indicators.support_level:.2f}
-• المقاومة: ${indicators.resistance_level:.2f}
+• الدعم: {_format_value(indicators.support_level, 2, '$')}
+• المقاومة: {_format_value(indicators.resistance_level, 2, '$')}
 
 🎯 الإشارة:
 • الاتجاه المقترح: {signal.direction}
 • حالة الإشارة: {signal.state.value}
 • درجة الثقة: {signal.confidence*100:.1f}%
-• سعر الدخول: ${signal.entry_price:.2f}
-• وقف الخسارة: ${signal.stop_loss:.2f if signal.stop_loss else 'غ.م'}
-• جني الأرباح: ${signal.take_profit:.2f if signal.take_profit else 'غ.م'}
+• سعر الدخول: {_format_value(signal.entry_price, 2, '$')}
+• وقف الخسارة: {_format_value(signal.stop_loss, 2, '$')}
+• جني الأرباح: {_format_value(signal.take_profit, 2, '$')}
 
 ⚠️ إدارة المخاطر:
 • حجم الموضع: {risk_assessment.position_size_pct:.2f}%

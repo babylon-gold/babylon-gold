@@ -1,6 +1,6 @@
 """Application configuration."""
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Literal
 
 
 class Settings(BaseSettings):
@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     DATA_DIR: str = "../BabylonAI_Gold_Data_Starter/data"
     DEMO_DATA_DIR: str = "../BabylonAI_Gold_Data_Starter/data/demo"
     LIVE_DATA_DIR: str = "../BabylonAI_Gold_Data_Starter/data/live"
+    QUOTE_STALE_SECONDS: int = 1800
+    # Keep demo data as the safe default. Set DATA_MODE=live explicitly when
+    # validated Twelve Data files should be loaded instead.
+    DATA_MODE: Literal["demo", "live"] = "demo"
 
     # Signal configuration
     WATCH_THRESHOLD: float = 0.5  # Watch signal threshold
