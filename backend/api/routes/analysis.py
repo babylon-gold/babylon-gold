@@ -11,6 +11,30 @@ from core.risk_management import risk_manager
 router = APIRouter()
 
 
+@router.get("")
+async def get_analysis(
+    timeframe: str = Query(..., description="Timeframe: 5min, 15min, 1h, 4h"),
+    account_size: float = Query(10000.0, description="Account size for risk assessment"),
+):
+    """Get analysis for specified timeframe."""
+    if timeframe not in ["5min", "15min", "1h", "4h"]:
+        raise HTTPException(status_code=400, detail="Invalid timeframe")
+    candles = data_service.get_candles(timeframe, limit=300)
+    if not candles:
+        return {"error": "No data available", "timeframe": timeframe}
+    try:
+        indicators = indicator_calculator.calculate_all(candles)
+        signal = signal_engine.generate_signal(candles, indicators, timeframe)
+        current_price = candles[-1].close if candles else 0
+        return {
+            "timeframe": timeframe,
+            "current_price": current_price,
+            "status": "ok"
+        }
+    except Exception as e:
+        return {"error": str(e), "timeframe": timeframe}
+
+
 def _format_value(value, decimals: int = 2, prefix: str = "") -> str:
     """Format optional numeric values without turning missing data into errors."""
     if value is None:
