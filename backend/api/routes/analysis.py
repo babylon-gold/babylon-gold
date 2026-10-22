@@ -67,6 +67,41 @@ def _generate_arabic_summary(
     return summary.strip()
 
 
+@router.get("")
+async def get_analysis(
+    timeframe: str = Query(..., description="Timeframe: 5min, 15min, 1h, 4h"),
+    account_size: float = Query(10000.0, description="Account size for risk assessment"),
+):
+    """Get analysis for specified timeframe."""
+    if timeframe not in ["5min", "15min", "1h", "4h"]:
+        raise HTTPException(status_code=400, detail="Invalid timeframe. Must be one of: 5min, 15min, 1h, 4h")
+
+    candles = data_service.get_candles(timeframe, limit=300)
+
+    if not candles:
+        raise HTTPException(status_code=404, detail="No data available for this timeframe")
+
+    try:
+        indicators = indicator_calculator.calculate_all(candles)
+        signal = signal_engine.generate_signal(candles, indicators, timeframe)
+        current_price = candles[-1].close
+        risk_assessment = risk_manager.assess_risk(signal, current_price, account_size)
+
+        arabic_summary = _generate_arabic_summary(indicators, signal, risk_assessment, current_price)
+
+        return {
+            "timestamp_utc": indicators.timestamp_utc,
+            "timeframe": timeframe,
+            "current_price": current_price,
+            "indicators": indicators.dict() if hasattr(indicators, 'dict') else indicators,
+            "signal": signal.dict() if hasattr(signal, 'dict') else signal,
+            "risk_assessment": risk_assessment.dict() if hasattr(risk_assessment, 'dict') else risk_assessment,
+            "arabic_summary": arabic_summary,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/complete/{interval}", response_model=Analysis)
 async def complete_analysis(
     interval: str = Path(..., description="Candle interval: 5min, 15min, 1h, 4h"),
