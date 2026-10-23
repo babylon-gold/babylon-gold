@@ -47,10 +47,10 @@
 ---
 
 ### 2. EXPOSED TELEGRAM BOT TOKEN  
-**File:** `PRODUCTION_DEPLOYMENT_REPORT.md`  
-**Exposed Value:** `8638559471:AAEywdftVuzprqB-gYc6PZawFSg5XZAlkQE`  
+**Files:** Multiple documentation files  
+**Exposed Value:** [REDACTED - Previously compromised]  
 **Status:** COMPROMISED - MUST ROTATE  
-**Fix Applied:** ✓ Removed from documentation, replaced with placeholder
+**Fix Applied:** ✓ Removed from all tracked files, replaced with placeholders
 
 **What was compromised:**
 - Telegram bot notifications (@thairaljaabibot)

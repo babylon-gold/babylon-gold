@@ -29,9 +29,9 @@
 
 ### 2. Exposed Telegram Bot Token (COMPROMISED)
 
-**Location:** `PRODUCTION_DEPLOYMENT_REPORT.md` (line with token)  
-**Exposed Token:** `8638559471:AAEywdftVuzprqB-gYc6PZawFSg5XZAlkQE`  
-**Git History:** Visible in latest commits  
+**Location:** Multiple documentation files  
+**Exposed Token:** [REDACTED - Previously exposed in public documentation]  
+**Git History:** Visible in earlier commits  
 **Status:** COMPROMISED - Must be rotated immediately
 
 **What This Token Protects:**

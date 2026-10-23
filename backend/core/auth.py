@@ -1,7 +1,9 @@
 """Authentication and authorization for Babylon AI Gold Intelligence."""
 import os
+import hmac
+import hashlib
 from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
 
@@ -11,12 +13,18 @@ ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 if not ADMIN_API_KEY:
     import logging
     logger = logging.getLogger(__name__)
-    logger.warning("⚠️ ADMIN_API_KEY environment variable not set. Admin endpoints will be disabled.")
+    logger.warning("ADMIN_API_KEY environment variable not set. Admin endpoints require valid token.")
 
 
-async def verify_admin_token(credentials: HTTPAuthCredentials = Depends(security)) -> str:
+def _constant_time_compare(a: str, b: str) -> bool:
+    """Compare two strings in constant time to prevent timing attacks."""
+    return hmac.compare_digest(a.encode(), b.encode())
+
+
+async def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
     """
     Verify admin bearer token for protected endpoints.
+    Fails closed if ADMIN_API_KEY is not configured.
 
     Usage in route:
     ```
@@ -27,14 +35,15 @@ async def verify_admin_token(credentials: HTTPAuthCredentials = Depends(security
     """
     if not ADMIN_API_KEY:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin API key not configured. Contact administrator.",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin authentication not configured",
         )
 
-    if credentials.credentials != ADMIN_API_KEY:
+    # Use constant-time comparison to prevent timing attacks
+    if not _constant_time_compare(credentials.credentials, ADMIN_API_KEY):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid or missing admin credentials",
+            detail="Invalid credentials",
         )
 
     return credentials.credentials

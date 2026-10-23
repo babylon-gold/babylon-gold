@@ -1,10 +1,11 @@
 """Notification management endpoints."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, timezone
 
 from core.notifications import notification_manager
+from core.auth import verify_admin_token
 
 router = APIRouter()
 
@@ -43,8 +44,11 @@ async def get_notification_preferences():
 
 
 @router.post("/preferences")
-async def set_notification_preferences(preferences: NotificationPreferences):
-    """Update notification preferences."""
+async def set_notification_preferences(
+    preferences: NotificationPreferences,
+    admin_token: str = Depends(verify_admin_token),
+):
+    """Update notification preferences - Requires admin authentication."""
     notification_manager.set_enabled("signals", preferences.signals)
     notification_manager.set_enabled("analysis", preferences.analysis)
     notification_manager.set_enabled("risks", preferences.risks)
@@ -58,8 +62,8 @@ async def set_notification_preferences(preferences: NotificationPreferences):
 
 
 @router.post("/test-signal")
-async def send_test_signal():
-    """Send a test trading signal notification."""
+async def send_test_signal(admin_token: str = Depends(verify_admin_token)):
+    """Send a test trading signal notification - Requires admin authentication."""
     if not notification_manager.telegram.enabled:
         raise HTTPException(
             status_code=400,
@@ -88,8 +92,8 @@ async def send_test_signal():
 
 
 @router.post("/test-analysis")
-async def send_test_analysis():
-    """Send a test market analysis notification."""
+async def send_test_analysis(admin_token: str = Depends(verify_admin_token)):
+    """Send a test market analysis notification - Requires admin authentication."""
     if not notification_manager.telegram.enabled:
         raise HTTPException(
             status_code=400,
@@ -116,8 +120,8 @@ async def send_test_analysis():
 
 
 @router.post("/test-risk")
-async def send_test_risk():
-    """Send a test risk alert notification."""
+async def send_test_risk(admin_token: str = Depends(verify_admin_token)):
+    """Send a test risk alert notification - Requires admin authentication."""
     if not notification_manager.telegram.enabled:
         raise HTTPException(
             status_code=400,
@@ -141,8 +145,8 @@ async def send_test_risk():
 
 
 @router.post("/test-system")
-async def send_test_system():
-    """Send a test system status notification."""
+async def send_test_system(admin_token: str = Depends(verify_admin_token)):
+    """Send a test system status notification - Requires admin authentication."""
     if not notification_manager.telegram.enabled:
         raise HTTPException(
             status_code=400,
@@ -165,8 +169,11 @@ async def send_test_system():
 
 
 @router.post("/custom")
-async def send_custom_notification(message: str):
-    """Send a custom notification message."""
+async def send_custom_notification(
+    message: str,
+    admin_token: str = Depends(verify_admin_token),
+):
+    """Send a custom notification message - Requires admin authentication."""
     if not notification_manager.telegram.enabled:
         raise HTTPException(
             status_code=400,

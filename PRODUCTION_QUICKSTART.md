@@ -199,13 +199,17 @@ git push origin rollback-v1.0.0
 NEXT_PUBLIC_API_URL=https://babylon-gold-backend.onrender.com/api/v1
 ```
 
-### Backend (.env)
+### Backend (.env) - CREDENTIALS MUST BE SET
 ```
-TELEGRAM_BOT_TOKEN=8638559471:AAEywdftVuzprqB-gYc6PZawFSg5XZAlkQE
-TELEGRAM_CHAT_ID=1694799253
+TELEGRAM_BOT_TOKEN=<ROTATE_IN_BOTFATHER>
+TELEGRAM_CHAT_ID=<YOUR_CHAT_ID>
+ADMIN_API_KEY=<GENERATE_SECURE_KEY>
 DEBUG=true
 DATA_MODE=demo
 ```
+
+**SECURITY WARNING:** Never commit actual credentials. All token values must be set in Render dashboard, not in code.
+See `SECURITY_INCIDENT.md` for credential rotation instructions.
 
 ---
 
