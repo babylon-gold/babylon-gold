@@ -75,3 +75,4 @@ build/
 .env.*.local
 
 .vercel
+.env*

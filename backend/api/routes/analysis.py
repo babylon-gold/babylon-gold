@@ -89,18 +89,29 @@ async def get_analysis(
         risk_assessment = risk_manager.assess_risk(signal, current_price, account_size)
 
         # Send Telegram notification if signal is generated and confidence is high enough
-        if signal and signal.confidence > 0:
-            notification_manager.notify_signal(
-                symbol="XAU/USD",
-                timeframe=timeframe,
-                direction=getattr(signal, 'direction', None),
-                state=getattr(signal, 'state', 'UNKNOWN'),
-                confidence=getattr(signal, 'confidence', 0),
-                entry_price=getattr(signal, 'entry_price', None),
-                stop_loss=getattr(signal, 'stop_loss', None),
-                take_profit=getattr(signal, 'take_profit', None),
-                risk_reward=risk_assessment.risk_reward if risk_assessment else None,
-            )
+        if signal and getattr(signal, 'confidence', 0) > 0:
+            try:
+                state_str = getattr(signal, 'state', 'UNKNOWN')
+                if hasattr(state_str, 'value'):
+                    state_str = state_str.value
+
+                risk_reward = None
+                if risk_assessment and hasattr(risk_assessment, 'risk_reward'):
+                    risk_reward = risk_assessment.risk_reward
+
+                notification_manager.notify_signal(
+                    symbol="XAU/USD",
+                    timeframe=timeframe,
+                    direction=getattr(signal, 'direction', None),
+                    state=str(state_str),
+                    confidence=float(getattr(signal, 'confidence', 0)),
+                    entry_price=getattr(signal, 'entry_price', None),
+                    stop_loss=getattr(signal, 'stop_loss', None),
+                    take_profit=getattr(signal, 'take_profit', None),
+                    risk_reward=risk_reward,
+                )
+            except Exception as notify_err:
+                print(f"Notification error (non-fatal): {notify_err}")
 
         arabic_summary = _generate_arabic_summary(indicators, signal, risk_assessment, current_price)
 
