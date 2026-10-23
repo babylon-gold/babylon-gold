@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -28,7 +28,7 @@ export default function EnhancedCandlestickChart({ timeframe }: EnhancedCandlest
   const [error, setError] = useState<string | null>(null)
   const [visibleCandles, setVisibleCandles] = useState(50)
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       const candles = await fetchCandlesWithIndicators(timeframe)
@@ -95,17 +95,21 @@ export default function EnhancedCandlestickChart({ timeframe }: EnhancedCandlest
       })
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load chart data')
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || 'Failed to load chart data')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeframe, visibleCandles])
 
   useEffect(() => {
     loadData()
-    const interval = setInterval(loadData, 60000)
-    return () => clearInterval(interval)
-  }, [timeframe])
+    const interval = setInterval(() => loadData(), 60000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [loadData])
 
   const options = {
     responsive: true,

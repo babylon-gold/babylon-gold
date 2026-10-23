@@ -30,23 +30,27 @@ export default function NotificationsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  const loadStatus = useCallback(async () => {
+  const loadStatus = useCallback(async (controller?: AbortController) => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_URL}/notifications/status`)
+      const response = await fetch(`${API_URL}/notifications/status`, {
+        signal: controller?.signal,
+      })
       if (!response.ok) throw new Error('Failed to load notification status')
       const data = await response.json()
       setStatus(data.status)
       setPreferences(data.status.notifications_enabled)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في تحميل الحالة')
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || 'خطأ في تحميل الحالة')
+      }
     } finally {
       setLoading(false)
     }
   }, [API_URL])
 
-  const savePreferences = async () => {
+  const savePreferences = useCallback(async () => {
     try {
       setSaving(true)
       const response = await fetch(`${API_URL}/notifications/preferences`, {
@@ -63,9 +67,9 @@ export default function NotificationsPage() {
     } finally {
       setSaving(false)
     }
-  }
+  }, [API_URL, loadStatus, preferences])
 
-  const sendTest = async (type: string) => {
+  const sendTest = useCallback(async (type: string) => {
     try {
       setTestSending(type)
       const response = await fetch(`${API_URL}/notifications/test-${type}`, {
@@ -82,10 +86,14 @@ export default function NotificationsPage() {
     } finally {
       setTestSending(null)
     }
-  }
+  }, [API_URL])
 
   useEffect(() => {
-    loadStatus()
+    const controller = new AbortController()
+    loadStatus(controller)
+    return () => {
+      controller.abort()
+    }
   }, [loadStatus])
 
   return (

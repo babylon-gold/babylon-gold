@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { AlertCircle, Clock } from 'lucide-react'
 import Dashboard from '@/components/Dashboard'
 import AnalysisPanel from '@/components/AnalysisPanel'
@@ -18,7 +18,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  const loadAnalysis = async (timeframe: Timeframe) => {
+  const loadAnalysis = useCallback(async (timeframe: Timeframe) => {
     setLoading(true)
     setError(null)
     try {
@@ -26,11 +26,13 @@ export default function Home() {
       setAnalysis(data)
       setLastUpdate(new Date())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في تحميل البيانات')
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || 'خطأ في تحميل البيانات')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadAnalysis(selectedTimeframe)
@@ -38,8 +40,10 @@ export default function Home() {
       loadAnalysis(selectedTimeframe)
     }, 30000) // Refresh every 30 seconds
 
-    return () => clearInterval(interval)
-  }, [selectedTimeframe])
+    return () => {
+      clearInterval(interval)
+    }
+  }, [selectedTimeframe, loadAnalysis])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">

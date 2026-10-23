@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AlertCircle, Play, Pause, RefreshCw, Activity, Clock } from 'lucide-react'
 
 interface SchedulerStatus {
@@ -36,62 +36,90 @@ export default function AdminPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const isMountedRef = useRef(true)
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
   const loadHealth = useCallback(async () => {
     try {
+      if (!isMountedRef.current) return
       setLoading(true)
       const response = await fetch(`${API_URL}/admin/system/health-detailed`)
       if (!response.ok) throw new Error('Failed to load system health')
       const data = await response.json()
-      setHealth(data.scheduler ? {
-        ...data.scheduler,
-        data: data.data,
-        refresh: data.refresh,
-      } : null)
-      setError(null)
+      if (isMountedRef.current) {
+        setHealth(data.scheduler ? {
+          ...data.scheduler,
+          data: data.data,
+          refresh: data.refresh,
+        } : null)
+        setError(null)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في تحميل البيانات')
+      if (isMountedRef.current && err instanceof Error && err.name !== 'AbortError') {
+        setError(err.message || 'خطأ في تحميل البيانات')
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }, [API_URL])
 
-  const triggerRefresh = async () => {
+  const triggerRefresh = useCallback(async () => {
     try {
+      if (!isMountedRef.current) return
       setRefreshing(true)
       setError(null)
       const response = await fetch(`${API_URL}/admin/data/refresh`, { method: 'POST' })
       if (!response.ok) throw new Error('فشل تحديث البيانات')
-      setSuccessMessage('✅ تم تحديث البيانات بنجاح')
-      setTimeout(() => loadHealth(), 1000)
+      if (isMountedRef.current) {
+        setSuccessMessage('✅ تم تحديث البيانات بنجاح')
+        setTimeout(() => loadHealth(), 1000)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في التحديث')
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'خطأ في التحديث')
+        setRefreshing(false)
+      }
     } finally {
-      setRefreshing(false)
+      if (isMountedRef.current) {
+        setRefreshing(false)
+      }
     }
-  }
+  }, [API_URL, loadHealth])
 
-  const toggleScheduler = async (action: 'start' | 'stop') => {
+  const toggleScheduler = useCallback(async (action: 'start' | 'stop') => {
     try {
+      if (!isMountedRef.current) return
       setLoading(true)
       setError(null)
       const response = await fetch(`${API_URL}/admin/scheduler/${action}`, { method: 'POST' })
       if (!response.ok) throw new Error(`فشل ${action === 'start' ? 'بدء' : 'إيقاف'} المجدول`)
-      setSuccessMessage(`✅ ${action === 'start' ? 'تم بدء' : 'تم إيقاف'} المجدول`)
-      setTimeout(() => loadHealth(), 500)
+      if (isMountedRef.current) {
+        setSuccessMessage(`✅ ${action === 'start' ? 'تم بدء' : 'تم إيقاف'} المجدول`)
+        setTimeout(() => loadHealth(), 500)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في المجدول')
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'خطأ في المجدول')
+        setLoading(false)
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
-  }
+  }, [API_URL, loadHealth])
 
   useEffect(() => {
+    isMountedRef.current = true
     loadHealth()
-    const interval = setInterval(loadHealth, 30000) // Refresh every 30s
-    return () => clearInterval(interval)
+    const interval = setInterval(() => loadHealth(), 30000)
+    return () => {
+      isMountedRef.current = false
+      clearInterval(interval)
+    }
   }, [loadHealth])
 
   useEffect(() => {
