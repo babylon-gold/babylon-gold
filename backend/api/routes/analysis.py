@@ -115,13 +115,32 @@ async def get_analysis(
 
         arabic_summary = _generate_arabic_summary(indicators, signal, risk_assessment, current_price)
 
+        # Safe serialization of risk_assessment
+        risk_dict = {}
+        if risk_assessment:
+            if hasattr(risk_assessment, 'dict'):
+                try:
+                    risk_dict = risk_assessment.dict()
+                except Exception:
+                    risk_dict = {
+                        'position_size_pct': getattr(risk_assessment, 'position_size_pct', None),
+                        'account_risk_pct': getattr(risk_assessment, 'account_risk_pct', None),
+                        'recommendation': getattr(risk_assessment, 'recommendation', None),
+                    }
+            else:
+                risk_dict = {
+                    'position_size_pct': getattr(risk_assessment, 'position_size_pct', None),
+                    'account_risk_pct': getattr(risk_assessment, 'account_risk_pct', None),
+                    'recommendation': getattr(risk_assessment, 'recommendation', None),
+                }
+
         return {
             "timestamp_utc": indicators.timestamp_utc,
             "timeframe": timeframe,
             "current_price": current_price,
             "indicators": indicators.dict() if hasattr(indicators, 'dict') else indicators,
             "signal": signal.dict() if hasattr(signal, 'dict') else signal,
-            "risk_assessment": risk_assessment.dict() if hasattr(risk_assessment, 'dict') else risk_assessment,
+            "risk_assessment": risk_dict,
             "arabic_summary": arabic_summary,
         }
     except Exception as e:
