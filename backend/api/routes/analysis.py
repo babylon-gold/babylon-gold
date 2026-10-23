@@ -7,49 +7,9 @@ from core.data_service import data_service
 from core.indicators import indicator_calculator
 from core.signal_engine import signal_engine
 from core.risk_management import risk_manager
+from core.notifications import notification_manager
 
 router = APIRouter()
-
-
-@router.get("")
-async def get_analysis(
-    timeframe: str = Query(..., description="Timeframe: 5min, 15min, 1h, 4h"),
-    account_size: float = Query(10000.0, description="Account size for risk assessment"),
-):
-    """Get analysis for specified timeframe."""
-    if timeframe not in ["5min", "15min", "1h", "4h"]:
-        raise HTTPException(status_code=400, detail="Invalid timeframe")
-    try:
-        candles = data_service.get_candles(timeframe, limit=300)
-        if not candles:
-            return {"status": "no_data", "timeframe": timeframe, "message": "No candles available"}
-
-        indicators = indicator_calculator.calculate_all(candles)
-        signal = signal_engine.generate_signal(candles, indicators, timeframe)
-        current_price = candles[-1].close if candles else None
-        risk_assessment = risk_manager.assess_risk(signal, current_price, account_size) if current_price else None
-
-        return {
-            "timestamp_utc": getattr(indicators, 'timestamp_utc', None),
-            "timeframe": timeframe,
-            "current_price": current_price,
-            "indicators": {
-                "ema_20": getattr(indicators, 'ema_20', None),
-                "ema_50": getattr(indicators, 'ema_50', None),
-                "ema_200": getattr(indicators, 'ema_200', None),
-                "rsi": getattr(indicators, 'rsi', None),
-                "atr": getattr(indicators, 'atr', None),
-                "adx": getattr(indicators, 'adx', None),
-            },
-            "signal": {
-                "direction": getattr(signal, 'direction', None),
-                "state": getattr(signal, 'state', None),
-                "confidence": getattr(signal, 'confidence', 0),
-            },
-            "status": "ok"
-        }
-    except Exception as e:
-        return {"status": "error", "error": str(e), "timeframe": timeframe}
 
 
 def _format_value(value, decimals: int = 2, prefix: str = "") -> str:
@@ -127,6 +87,20 @@ async def get_analysis(
         signal = signal_engine.generate_signal(candles, indicators, timeframe)
         current_price = candles[-1].close
         risk_assessment = risk_manager.assess_risk(signal, current_price, account_size)
+
+        # Send Telegram notification if signal is generated and confidence is high enough
+        if signal and signal.confidence > 0:
+            notification_manager.notify_signal(
+                symbol="XAU/USD",
+                timeframe=timeframe,
+                direction=getattr(signal, 'direction', None),
+                state=getattr(signal, 'state', 'UNKNOWN'),
+                confidence=getattr(signal, 'confidence', 0),
+                entry_price=getattr(signal, 'entry_price', None),
+                stop_loss=getattr(signal, 'stop_loss', None),
+                take_profit=getattr(signal, 'take_profit', None),
+                risk_reward=risk_assessment.risk_reward if risk_assessment else None,
+            )
 
         arabic_summary = _generate_arabic_summary(indicators, signal, risk_assessment, current_price)
 
