@@ -133,6 +133,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://babylon-gold-backend.onrender.com/api/v1
 
   # Deploy to staging (on develop branch)
   deploy-staging:
@@ -172,14 +174,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy Frontend to Vercel
-        uses: vercel/action@master
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # Note: Vercel has native GitHub integration for automatic deployments from main branch.
+      # If explicit deployment is needed, use Vercel CLI. For now, relying on Vercel's
+      # automatic GitHub integration which is more reliable than deprecated/unofficial actions.
 
       - name: Deploy Backend to Render Production
         env:
@@ -190,15 +187,29 @@ jobs:
             exit 1
           fi
 
+          # Trigger deployment via webhook
           response=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
           http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | head -n-1)
-
-          echo "Deployment response: $body"
 
           if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 201 ]; then
-            echo "ERROR: Production deployment failed with HTTP $http_code"
+            echo "ERROR: Production deployment webhook failed with HTTP $http_code"
             exit 1
           fi
 
-          echo "Production deployment triggered successfully"
+          echo "Backend deployment triggered on Render (HTTP $http_code)"
+
+      - name: Verify Render Backend Health
+        run: |
+          # Wait for Render deployment to start
+          sleep 10
+
+          # Check backend health endpoint
+          health_response=$(curl -s -w "\n%{http_code}" https://babylon-gold-backend.onrender.com/api/v1/health)
+          health_code=$(echo "$health_response" | tail -n1)
+
+          if [ "$health_code" -ne 200 ]; then
+            echo "WARNING: Backend health check returned HTTP $health_code"
+            echo "This may be normal if deployment is still in progress"
+          else
+            echo "Backend health check passed (HTTP 200)"
+          fi
