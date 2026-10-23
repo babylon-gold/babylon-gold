@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { AlertCircle, Play, Pause, RefreshCw, Activity, Clock } from 'lucide-react'
 
 interface SchedulerStatus {
@@ -39,7 +39,7 @@ export default function AdminPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  const loadHealth = async () => {
+  const loadHealth = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`${API_URL}/admin/system/health-detailed`)
@@ -56,7 +56,7 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [API_URL])
 
   const triggerRefresh = async () => {
     try {
@@ -92,7 +92,7 @@ export default function AdminPage() {
     loadHealth()
     const interval = setInterval(loadHealth, 30000) // Refresh every 30s
     return () => clearInterval(interval)
-  }, [])
+  }, [loadHealth])
 
   useEffect(() => {
     if (successMessage) {

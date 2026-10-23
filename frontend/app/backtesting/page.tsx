@@ -382,7 +382,7 @@ export default function BacktestingPage() {
               <div className="card h-96 flex items-center justify-center">
                 <div className="text-center">
                   <Play className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400">اضغط على "تشغيل الاختبار" لبدء الاختبار</p>
+                  <p className="text-slate-400">اضغط على &quot;تشغيل الاختبار&quot; لبدء الاختبار</p>
                 </div>
               </div>
             )}

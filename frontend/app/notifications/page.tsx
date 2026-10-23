@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { AlertCircle, Send, CheckCircle } from 'lucide-react'
 
 interface NotificationStatus {
@@ -30,7 +30,7 @@ export default function NotificationsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`${API_URL}/notifications/status`)
@@ -44,7 +44,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [API_URL])
 
   const savePreferences = async () => {
     try {
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     loadStatus()
-  }, [])
+  }, [loadStatus])
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
