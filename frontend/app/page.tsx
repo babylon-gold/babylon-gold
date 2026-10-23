@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import useSWR from 'swr'
+import { useState } from 'react'
 import { AlertCircle, Clock } from 'lucide-react'
 import Dashboard from '@/components/Dashboard'
 import AnalysisPanel from '@/components/AnalysisPanel'
@@ -13,37 +14,17 @@ type Timeframe = '5min' | '15min' | '1h' | '4h'
 
 export default function Home() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('15min')
-  const [analysis, setAnalysis] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
-  const loadAnalysis = useCallback(async (timeframe: Timeframe) => {
-    setLoading(true)
-    setError(null)
-    try {
+  const { data: analysis, error: analysisError, isLoading } = useSWR(
+    selectedTimeframe,
+    async (timeframe: Timeframe) => {
       const data = await fetchAnalysis(timeframe)
-      setAnalysis(data)
       setLastUpdate(new Date())
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setError(err.message || 'خطأ في تحميل البيانات')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadAnalysis(selectedTimeframe)
-    const interval = setInterval(() => {
-      loadAnalysis(selectedTimeframe)
-    }, 30000) // Refresh every 30 seconds
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [selectedTimeframe, loadAnalysis])
+      return data
+    },
+    { refreshInterval: 30000, dedupingInterval: 5000 }
+  )
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
@@ -113,7 +94,7 @@ export default function Home() {
             <TimeframeSelector
               selected={selectedTimeframe}
               onChange={setSelectedTimeframe}
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
           {lastUpdate && (
@@ -125,13 +106,13 @@ export default function Home() {
         </div>
 
         {/* Main Content Grid */}
-        {loading && !analysis ? (
+        {isLoading && !analysis ? (
           <LoadingSpinner />
-        ) : error ? (
+        ) : analysisError ? (
           <div className="card bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-600/40 p-8 text-center backdrop-blur rounded-xl">
             <div className="flex items-center justify-center gap-3 text-red-300">
               <AlertCircle className="w-8 h-8" />
-              <span className="text-lg">{error}</span>
+              <span className="text-lg">{analysisError.message || 'خطأ في تحميل البيانات'}</span>
             </div>
           </div>
         ) : analysis ? (

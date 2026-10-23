@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import useSWR from 'swr'
+import { useState } from 'react'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -23,93 +24,75 @@ interface EnhancedCandlestickChartProps {
 }
 
 export default function EnhancedCandlestickChart({ timeframe }: EnhancedCandlestickChartProps) {
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [visibleCandles, setVisibleCandles] = useState(50)
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true)
-      const candles = await fetchCandlesWithIndicators(timeframe)
-
-      console.log('Chart data received:', { isArray: Array.isArray(candles), length: candles?.length, type: typeof candles })
-
-      // Response is already an array of CandleWithIndicators
+  const { data: rawCandles, error: loadError, isLoading } = useSWR(
+    timeframe,
+    async (tf: string) => {
+      const candles = await fetchCandlesWithIndicators(tf)
       if (!Array.isArray(candles) || candles.length === 0) {
         throw new Error(`No candle data available. Got: ${typeof candles}, length: ${candles?.length}`)
       }
+      return candles
+    },
+    { refreshInterval: 60000, dedupingInterval: 5000 }
+  )
 
-      const displayCandles = candles.slice(-visibleCandles)
-      const labels = displayCandles.map((c: any) =>
-        new Date(c.timestamp_utc).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      )
+  const data = rawCandles ? (() => {
+    const displayCandles = rawCandles.slice(-visibleCandles)
+    const labels = displayCandles.map((c: any) =>
+      new Date(c.timestamp_utc).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    )
 
-      const closeData = displayCandles.map((c: any) => c.close)
-      const ema20Data = displayCandles.map((c: any) => c.ema20)
-      const ema50Data = displayCandles.map((c: any) => c.ema50)
-      const ema200Data = displayCandles.map((c: any) => c.ema200)
+    const closeData = displayCandles.map((c: any) => c.close)
+    const ema20Data = displayCandles.map((c: any) => c.ema20)
+    const ema50Data = displayCandles.map((c: any) => c.ema50)
+    const ema200Data = displayCandles.map((c: any) => c.ema200)
 
-      setData({
-        labels,
-        datasets: [
-          {
-            label: 'Close Price',
-            data: closeData,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.05)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 2,
-            borderWidth: 2,
-          },
-          {
-            label: 'EMA 200',
-            data: ema200Data,
-            borderColor: '#8b5cf6',
-            fill: false,
-            tension: 0.3,
-            pointRadius: 0,
-            borderWidth: 1.5,
-            borderDashOffset: 5,
-          },
-          {
-            label: 'EMA 50',
-            data: ema50Data,
-            borderColor: '#f59e0b',
-            fill: false,
-            tension: 0.3,
-            pointRadius: 0,
-            borderWidth: 1.5,
-          },
-          {
-            label: 'EMA 20',
-            data: ema20Data,
-            borderColor: '#f2b631',
-            fill: false,
-            tension: 0.3,
-            pointRadius: 0,
-            borderWidth: 2,
-          },
-        ],
-      })
-      setError(null)
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setError(err.message || 'Failed to load chart data')
-      }
-    } finally {
-      setLoading(false)
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Close Price',
+          data: closeData,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.05)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2,
+          borderWidth: 2,
+        },
+        {
+          label: 'EMA 200',
+          data: ema200Data,
+          borderColor: '#8b5cf6',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 1.5,
+          borderDashOffset: 5,
+        },
+        {
+          label: 'EMA 50',
+          data: ema50Data,
+          borderColor: '#f59e0b',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 1.5,
+        },
+        {
+          label: 'EMA 20',
+          data: ema20Data,
+          borderColor: '#f2b631',
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2,
+        },
+      ],
     }
-  }, [timeframe, visibleCandles])
-
-  useEffect(() => {
-    loadData()
-    const interval = setInterval(() => loadData(), 60000)
-    return () => {
-      clearInterval(interval)
-    }
-  }, [loadData])
+  })() : null
 
   const options = {
     responsive: true,
@@ -141,12 +124,12 @@ export default function EnhancedCandlestickChart({ timeframe }: EnhancedCandlest
     },
   }
 
-  if (loading) {
+  if (isLoading) {
     return <div className="h-80 flex items-center justify-center text-slate-400">جاري تحميل البيانات...</div>
   }
 
-  if (error) {
-    return <div className="h-80 flex items-center justify-center text-red-400">خطأ: {error}</div>
+  if (loadError) {
+    return <div className="h-80 flex items-center justify-center text-red-400">خطأ: {loadError.message || 'Failed to load chart data'}</div>
   }
 
   return (

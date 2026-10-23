@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import useSWR from 'swr'
+import React, { useState } from 'react'
 import { AlertCircle, Play, Pause, RefreshCw, Activity, Clock } from 'lucide-react'
 
 interface SchedulerStatus {
@@ -31,77 +32,55 @@ interface HealthData {
 }
 
 export default function AdminPage() {
-  const [health, setHealth] = useState<HealthData | null>(null)
-  const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  const loadHealth = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(`${API_URL}/admin/system/health-detailed`)
+  const { data: health, error: loadError, mutate: reloadHealth, isLoading } = useSWR<HealthData>(
+    `${API_URL}/admin/system/health-detailed`,
+    async (url) => {
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to load system health')
       const data = await response.json()
-      setHealth(data.scheduler ? {
+      return data.scheduler ? {
         ...data.scheduler,
         data: data.data,
         refresh: data.refresh,
-      } : null)
-      setError(null)
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setError(err.message || 'خطأ في تحميل البيانات')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [API_URL])
+      } : null
+    },
+    { refreshInterval: 30000, dedupingInterval: 5000 }
+  )
 
-  const triggerRefresh = useCallback(async () => {
+  const triggerRefresh = async () => {
     try {
       setRefreshing(true)
-      setError(null)
       const response = await fetch(`${API_URL}/admin/data/refresh`, { method: 'POST' })
       if (!response.ok) throw new Error('فشل تحديث البيانات')
       setSuccessMessage('✅ تم تحديث البيانات بنجاح')
-      setTimeout(() => loadHealth(), 1000)
+      setTimeout(() => reloadHealth(), 1000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في التحديث')
+      setSuccessMessage(err instanceof Error ? err.message : 'خطأ في التحديث')
     } finally {
       setRefreshing(false)
     }
-  }, [API_URL, loadHealth])
+  }
 
-  const toggleScheduler = useCallback(async (action: 'start' | 'stop') => {
+  const toggleScheduler = async (action: 'start' | 'stop') => {
     try {
-      setLoading(true)
-      setError(null)
       const response = await fetch(`${API_URL}/admin/scheduler/${action}`, { method: 'POST' })
       if (!response.ok) throw new Error(`فشل ${action === 'start' ? 'بدء' : 'إيقاف'} المجدول`)
       setSuccessMessage(`✅ ${action === 'start' ? 'تم بدء' : 'تم إيقاف'} المجدول`)
-      setTimeout(() => loadHealth(), 500)
+      setTimeout(() => reloadHealth(), 500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في المجدول')
-    } finally {
-      setLoading(false)
+      setSuccessMessage(err instanceof Error ? err.message : 'خطأ في المجدول')
     }
-  }, [API_URL, loadHealth])
+  }
 
-  useEffect(() => {
-    loadHealth()
-    const interval = setInterval(() => loadHealth(), 30000)
-    return () => clearInterval(interval)
-  }, [loadHealth])
-
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 5000)
-      return () => clearTimeout(timer)
-    }
-    return
+  React.useEffect(() => {
+    if (!successMessage) return
+    const timer = setTimeout(() => setSuccessMessage(null), 5000)
+    return () => clearTimeout(timer)
   }, [successMessage])
 
   return (
@@ -118,10 +97,10 @@ export default function AdminPage() {
         </div>
 
         {/* Alerts */}
-        {error && (
+        {loadError && (
           <div className="card bg-red-900/20 border-red-700 p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-red-300">{error}</div>
+            <div className="text-red-300">{loadError.message || 'خطأ في تحميل البيانات'}</div>
           </div>
         )}
 
@@ -132,7 +111,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <div className="card text-center py-12">
             <div className="animate-spin inline-block w-6 h-6 border-2 border-gold-400 border-t-transparent rounded-full"></div>
             <p className="text-slate-400 mt-4">جاري التحميل...</p>
@@ -157,7 +136,7 @@ export default function AdminPage() {
 
               <button
                 onClick={() => toggleScheduler(health?.scheduler?.running ? 'stop' : 'start')}
-                disabled={loading}
+                disabled={isLoading}
                 className="card hover:bg-slate-700/50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-3">

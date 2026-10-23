@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import useSWR from 'swr'
+import { useState } from 'react'
 import { AlertCircle, Send, CheckCircle } from 'lucide-react'
 
 interface NotificationStatus {
@@ -15,12 +16,9 @@ interface NotificationStatus {
 }
 
 export default function NotificationsPage() {
-  const [status, setStatus] = useState<NotificationStatus | null>(null)
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testSending, setTestSending] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [preferences, setPreferences] = useState({
     signals: true,
     analysis: false,
@@ -30,27 +28,19 @@ export default function NotificationsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  const loadStatus = useCallback(async (controller?: AbortController) => {
-    try {
-      setLoading(true)
-      const response = await fetch(`${API_URL}/notifications/status`, {
-        signal: controller?.signal,
-      })
+  const { data: status, error: loadError, mutate: reloadStatus, isLoading } = useSWR<{ status: NotificationStatus }>(
+    `${API_URL}/notifications/status`,
+    async (url) => {
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to load notification status')
       const data = await response.json()
-      setStatus(data.status)
       setPreferences(data.status.notifications_enabled)
-      setError(null)
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setError(err.message || 'خطأ في تحميل الحالة')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [API_URL])
+      return data
+    },
+    { dedupingInterval: 5000 }
+  )
 
-  const savePreferences = useCallback(async () => {
+  const savePreferences = async () => {
     try {
       setSaving(true)
       const response = await fetch(`${API_URL}/notifications/preferences`, {
@@ -61,15 +51,15 @@ export default function NotificationsPage() {
       if (!response.ok) throw new Error('Failed to save preferences')
       setSuccessMessage('✅ تم حفظ التفضيلات بنجاح')
       setTimeout(() => setSuccessMessage(null), 3000)
-      await loadStatus()
+      await reloadStatus()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في الحفظ')
+      setSuccessMessage(err instanceof Error ? err.message : 'خطأ في الحفظ')
     } finally {
       setSaving(false)
     }
-  }, [API_URL, loadStatus, preferences])
+  }
 
-  const sendTest = useCallback(async (type: string) => {
+  const sendTest = async (type: string) => {
     try {
       setTestSending(type)
       const response = await fetch(`${API_URL}/notifications/test-${type}`, {
@@ -82,19 +72,11 @@ export default function NotificationsPage() {
       setSuccessMessage(`✅ تم إرسال تنبيه اختبار ${type} بنجاح`)
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطأ في الإرسال')
+      setSuccessMessage(err instanceof Error ? err.message : 'خطأ في الإرسال')
     } finally {
       setTestSending(null)
     }
-  }, [API_URL])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    loadStatus(controller)
-    return () => {
-      controller.abort()
-    }
-  }, [loadStatus])
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
@@ -110,10 +92,10 @@ export default function NotificationsPage() {
         </div>
 
         {/* Alerts */}
-        {error && (
+        {loadError && (
           <div className="card bg-red-900/20 border-red-700 p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-red-300">{error}</div>
+            <div className="text-red-300">{loadError.message || 'خطأ في تحميل الحالة'}</div>
           </div>
         )}
 
@@ -124,12 +106,12 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {loading ? (
+        {isLoading ? (
           <div className="card text-center py-12">
             <div className="animate-spin inline-block w-6 h-6 border-2 border-gold-400 border-t-transparent rounded-full"></div>
             <p className="text-slate-400 mt-4">جاري التحميل...</p>
           </div>
-        ) : status ? (
+        ) : status?.status ? (
           <div className="space-y-6">
             {/* Status Card */}
             <div className="card">
@@ -140,7 +122,7 @@ export default function NotificationsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Telegram Bot:</span>
                   <div className="flex items-center gap-2">
-                    {status.telegram_enabled ? (
+                    {status.status.telegram_enabled ? (
                       <>
                         <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                         <span className="text-emerald-400">🟢 متصل</span>
@@ -155,15 +137,15 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">التكوين:</span>
-                  <span className={status.telegram_configured ? 'text-emerald-400' : 'text-red-400'}>
-                    {status.telegram_configured ? '✅ مكتمل' : '❌ غير مكتمل'}
+                  <span className={status.status.telegram_configured ? 'text-emerald-400' : 'text-red-400'}>
+                    {status.status.telegram_configured ? '✅ مكتمل' : '❌ غير مكتمل'}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Setup Guide */}
-            {!status.telegram_enabled && (
+            {!status.status.telegram_enabled && (
               <div className="card bg-amber-900/20 border-amber-700/50">
                 <div className="card-header border-b border-amber-700/30 pb-3">
                   <h3 className="font-semibold text-amber-300">⚙️ إعداد Telegram</h3>
@@ -238,7 +220,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Test Notifications */}
-            {status.telegram_enabled && (
+            {status?.status?.telegram_enabled && (
               <div className="card">
                 <div className="card-header border-b border-slate-700/50 pb-4">
                   <h2 className="text-xl font-semibold text-gold-400">اختبار الإشعارات</h2>
