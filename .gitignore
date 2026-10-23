@@ -63,6 +63,21 @@ data/live/*.csv
 data/live/*.json
 !data/live/README.txt
 
+# CRITICAL: Never commit credentials or secrets
+api_key.txt
+*.key
+*.pem
+*.token
+secrets.json
+config.secret.json
+credentials.json
+.aws/credentials
+.boto
+.ssh/
+*.p8
+*.p12
+*.pfx
+
 # Cache
 .cache/
 .turbo/

@@ -144,9 +144,11 @@ Database Connections: ✅ Stable
 - `NEXT_PUBLIC_API_URL=https://babylon-gold-backend.onrender.com/api/v1`
 
 ### Backend Environment Variables
-- `TELEGRAM_BOT_TOKEN=8638559471:AAEywdftVuzprqB-gYc6PZawFSg5XZAlkQE`
-- `TELEGRAM_CHAT_ID=1694799253`
+- `TELEGRAM_BOT_TOKEN=<ROTATE_THIS_KEY_IN_BOTFATHER>`
+- `TELEGRAM_CHAT_ID=<YOUR_CHAT_ID>`
 - `CORS_ORIGINS=https://babylon-gold.vercel.app`
+
+**⚠️ SECURITY WARNING:** The original Telegram bot token has been exposed in version control. It must be rotated immediately. See "Credential Rotation" section below.
 
 ---
 

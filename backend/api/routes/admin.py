@@ -1,5 +1,5 @@
 """Administrative endpoints for data management and scheduler control."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
 
 from core.data_refresh import refresh_pipeline
@@ -9,12 +9,13 @@ from core.scheduler import (
     get_scheduler_status,
     scheduler,
 )
+from core.auth import verify_admin_token
 
 router = APIRouter()
 
 
 @router.post("/data/refresh")
-async def trigger_data_refresh():
+async def trigger_data_refresh(admin_token: str = Depends(verify_admin_token)):
     """
     Manually trigger the data refresh pipeline.
 
@@ -33,7 +34,7 @@ async def trigger_data_refresh():
 
 
 @router.get("/data/refresh-status")
-async def get_refresh_status():
+async def get_refresh_status(admin_token: str = Depends(verify_admin_token)):
     """Get the status of the last data refresh."""
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -42,7 +43,7 @@ async def get_refresh_status():
 
 
 @router.post("/scheduler/start")
-async def start_scheduler_endpoint():
+async def start_scheduler_endpoint(admin_token: str = Depends(verify_admin_token)):
     """Start the background scheduler for periodic data refresh."""
     if scheduler.running:
         raise HTTPException(
@@ -66,7 +67,7 @@ async def start_scheduler_endpoint():
 
 
 @router.post("/scheduler/stop")
-async def stop_scheduler_endpoint():
+async def stop_scheduler_endpoint(admin_token: str = Depends(verify_admin_token)):
     """Stop the background scheduler."""
     if not scheduler.running:
         raise HTTPException(
@@ -82,7 +83,7 @@ async def stop_scheduler_endpoint():
 
 
 @router.get("/scheduler/status")
-async def scheduler_status():
+async def scheduler_status(admin_token: str = Depends(verify_admin_token)):
     """Get the current scheduler status and next run times."""
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -91,7 +92,7 @@ async def scheduler_status():
 
 
 @router.get("/system/health-detailed")
-async def detailed_health():
+async def detailed_health(admin_token: str = Depends(verify_admin_token)):
     """Get detailed system health information."""
     from core.data_service import data_service
 

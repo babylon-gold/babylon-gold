@@ -7,7 +7,6 @@ from core.data_service import data_service
 from core.indicators import indicator_calculator
 from core.signal_engine import signal_engine
 from core.risk_management import risk_manager
-from core.notifications import notification_manager
 
 router = APIRouter()
 
@@ -88,30 +87,10 @@ async def get_analysis(
         current_price = candles[-1].close
         risk_assessment = risk_manager.assess_risk(signal, current_price, account_size)
 
-        # Send Telegram notification if signal is generated and confidence is high enough
-        if signal and getattr(signal, 'confidence', 0) > 0:
-            try:
-                state_str = getattr(signal, 'state', 'UNKNOWN')
-                if hasattr(state_str, 'value'):
-                    state_str = state_str.value
-
-                risk_reward = None
-                if risk_assessment and hasattr(risk_assessment, 'risk_reward'):
-                    risk_reward = risk_assessment.risk_reward
-
-                notification_manager.notify_signal(
-                    symbol="XAU/USD",
-                    timeframe=timeframe,
-                    direction=getattr(signal, 'direction', None),
-                    state=str(state_str),
-                    confidence=float(getattr(signal, 'confidence', 0)),
-                    entry_price=getattr(signal, 'entry_price', None),
-                    stop_loss=getattr(signal, 'stop_loss', None),
-                    take_profit=getattr(signal, 'take_profit', None),
-                    risk_reward=risk_reward,
-                )
-            except Exception as notify_err:
-                print(f"Notification error (non-fatal): {notify_err}")
+        # NOTE: Telegram notifications are NOT sent from this GET endpoint
+        # to prevent duplicate alerts from page refreshes or multiple requests.
+        # Notifications are sent by the scheduler via /api/v1/admin/signal-notification
+        # after proper deduplication and validation.
 
         arabic_summary = _generate_arabic_summary(indicators, signal, risk_assessment, current_price)
 
