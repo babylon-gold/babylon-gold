@@ -1,0 +1,82 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.7.0 -- D:\BabylonAI_GoldIntelligence\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\BabylonAI_GoldIntelligence\backend
+plugins: anyio-4.15.1
+collecting ... collected 44 items
+
+tests/test_api.py::test_root PASSED                                      [  2%]
+tests/test_api.py::test_health_check PASSED                              [  4%]
+tests/test_api.py::test_data_status PASSED                               [  6%]
+tests/test_api.py::test_live_quote PASSED                                [  9%]
+tests/test_api.py::test_live_quote_stale_returns_503 PASSED              [ 11%]
+tests/test_api.py::test_live_quote_invalid_returns_503 PASSED            [ 13%]
+tests/test_api.py::test_get_candles_invalid_interval PASSED              [ 15%]
+tests/test_api.py::test_get_candles_5min PASSED                          [ 18%]
+tests/test_api.py::test_get_candles_15min PASSED                         [ 20%]
+tests/test_api.py::test_generate_signal_invalid_interval PASSED          [ 22%]
+tests/test_api.py::test_complete_analysis_15min PASSED                   [ 25%]
+tests/test_api.py::test_signal_history_15min PASSED                      [ 27%]
+tests/test_api.py::test_assess_risk_15min PASSED                         [ 29%]
+tests/test_api.py::test_live_data_mode_filters_incomplete_bars PASSED    [ 31%]
+tests/test_api.py::test_multi_timeframe_analysis PASSED                  [ 34%]
+tests/test_auth_security.py::TestAdminAuthenticationRequired::test_scheduler_status_without_auth_returns_401 PASSED [ 36%]
+tests/test_auth_security.py::TestAdminAuthenticationRequired::test_data_refresh_without_auth_returns_401 PASSED [ 38%]
+tests/test_auth_security.py::TestAdminAuthenticationRequired::test_scheduler_start_without_auth_returns_401 PASSED [ 40%]
+tests/test_auth_security.py::TestAdminAuthenticationRequired::test_scheduler_stop_without_auth_returns_401 PASSED [ 43%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_notification_preferences_post_without_auth_returns_401 PASSED [ 45%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_test_signal_without_auth_returns_401 PASSED [ 47%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_test_analysis_without_auth_returns_401 PASSED [ 50%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_test_risk_without_auth_returns_401 PASSED [ 52%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_test_system_without_auth_returns_401 PASSED [ 54%]
+tests/test_auth_security.py::TestNotificationAuthenticationRequired::test_custom_notification_without_auth_returns_401 PASSED [ 56%]
+tests/test_auth_security.py::TestAdminAuthenticationWithValidToken::test_scheduler_status_with_valid_token PASSED [ 59%]
+tests/test_auth_security.py::TestAdminAuthenticationWithInvalidToken::test_scheduler_status_with_invalid_token_returns_403 PASSED [ 61%]
+tests/test_auth_security.py::TestPublicEndpointsNoAuth::test_health_endpoint_no_auth PASSED [ 63%]
+tests/test_auth_security.py::TestPublicEndpointsNoAuth::test_root_endpoint_no_auth PASSED [ 65%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_data_refresh_without_auth_returns_401 PASSED [ 68%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_scheduler_start_without_auth_returns_401 PASSED [ 70%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_scheduler_stop_without_auth_returns_401 PASSED [ 72%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_scheduler_status_without_auth_returns_401 PASSED [ 75%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_health_detailed_without_auth_returns_401 PASSED [ 77%]
+tests/test_security.py::TestAdminAuthenticationRequired::test_data_refresh_status_without_auth_returns_401 PASSED [ 79%]
+tests/test_security.py::TestAdminAuthenticationValid::test_scheduler_status_with_valid_auth_returns_200 PASSED [ 81%]
+tests/test_security.py::TestAdminAuthenticationInvalid::test_scheduler_status_with_invalid_token_returns_403 PASSED [ 84%]
+tests/test_security.py::TestAdminAuthenticationInvalid::test_scheduler_status_with_no_bearer_returns_401 PASSED [ 86%]
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_200 PASSED [ 88%]
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_json PASSED [ 90%]
+tests/test_security.py::TestPublicEndpointsNoAuth::test_health_endpoint_without_auth_returns_200 PASSED [ 93%]
+tests/test_security.py::TestPublicEndpointsNoAuth::test_root_endpoint_without_auth_returns_200 PASSED [ 95%]
+tests/test_security.py::TestSecurityHeaders::test_cors_headers_present PASSED [ 97%]
+tests/test_security.py::test_api_key_txt_not_in_repo PASSED              [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\BabylonAI_GoldIntelligence\backend\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+core\models.py:16
+  D:\BabylonAI_GoldIntelligence\backend\core\models.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    class Candle(BaseModel):
+
+core\config.py:6
+  D:\BabylonAI_GoldIntelligence\backend\core\config.py:6: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    class Settings(BaseSettings):
+
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_200
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_json
+  D:\BabylonAI_GoldIntelligence\backend\api\routes\analysis.py:102: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    risk_dict = risk_assessment.dict()
+
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_200
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_json
+  D:\BabylonAI_GoldIntelligence\backend\api\routes\analysis.py:120: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    "indicators": indicators.dict() if hasattr(indicators, 'dict') else indicators,
+
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_200
+tests/test_security.py::TestAnalysisEndpointNoUncontrolledNotifications::test_analysis_endpoint_returns_json
+  D:\BabylonAI_GoldIntelligence\backend\api\routes\analysis.py:121: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.14/migration/
+    "signal": signal.dict() if hasattr(signal, 'dict') else signal,
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 44 passed, 9 warnings in 2.60s ========================

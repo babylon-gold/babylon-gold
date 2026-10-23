@@ -42,7 +42,7 @@ export default function AdminPage() {
   const loadHealth = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/health')
+      const response = await fetch(`${API_URL}/admin/system/health-detailed`)
       if (!response.ok) throw new Error('Failed to load system health')
       const data = await response.json()
       setHealth(data.scheduler ? {
@@ -58,13 +58,13 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [API_URL])
 
   const triggerRefresh = useCallback(async () => {
     try {
       setRefreshing(true)
       setError(null)
-      const response = await fetch('/api/admin/refresh', { method: 'POST' })
+      const response = await fetch(`${API_URL}/admin/data/refresh`, { method: 'POST' })
       if (!response.ok) throw new Error('فشل تحديث البيانات')
       setSuccessMessage('✅ تم تحديث البيانات بنجاح')
       setTimeout(() => loadHealth(), 1000)
@@ -73,13 +73,13 @@ export default function AdminPage() {
     } finally {
       setRefreshing(false)
     }
-  }, [loadHealth])
+  }, [API_URL, loadHealth])
 
   const toggleScheduler = useCallback(async (action: 'start' | 'stop') => {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`/api/admin/scheduler?action=${action}`, { method: 'POST' })
+      const response = await fetch(`${API_URL}/admin/scheduler/${action}`, { method: 'POST' })
       if (!response.ok) throw new Error(`فشل ${action === 'start' ? 'بدء' : 'إيقاف'} المجدول`)
       setSuccessMessage(`✅ ${action === 'start' ? 'تم بدء' : 'تم إيقاف'} المجدول`)
       setTimeout(() => loadHealth(), 500)
@@ -88,7 +88,7 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
-  }, [loadHealth])
+  }, [API_URL, loadHealth])
 
   useEffect(() => {
     loadHealth()
