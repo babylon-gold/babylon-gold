@@ -137,12 +137,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy to Railway Staging
+      - name: Deploy Backend to Render Staging
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}
         run: |
-          npm install -g @railway/cli
-          railway up --service backend --service frontend
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl --no-buffer -X POST "$RENDER_DEPLOY_HOOK"
+            echo "Deployment triggered for staging backend"
+          else
+            echo "RENDER_DEPLOY_HOOK_STAGING not configured"
+          fi
         continue-on-error: true
 
   # Deploy to production (on main branch)
@@ -162,10 +166,14 @@ jobs:
           scope: ${{ secrets.VERCEL_ORG_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy Backend to Railway Production
+      - name: Deploy Backend to Render Production
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}
         run: |
-          npm install -g @railway/cli
-          railway up --service backend
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl --no-buffer -X POST "$RENDER_DEPLOY_HOOK"
+            echo "Deployment triggered for production backend"
+          else
+            echo "RENDER_DEPLOY_HOOK_PRODUCTION not configured"
+          fi
         continue-on-error: true
