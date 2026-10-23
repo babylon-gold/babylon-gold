@@ -159,13 +159,13 @@ WARNING: ADMIN_API_KEY environment variable not set (expected, needs Render env 
 ## Compromised Credentials Requiring Rotation
 
 ### 1. TwelveData API Key (COMPROMISED)
-**Old Key:** `f09d6da7d9a54903bf348c5e935ec90d`  
 **Exposure:** File-based (`api_key.txt`), git history  
-**Status:** DELETED from repository  
-**User Action Required:** ✅ MUST ROTATE
-- Revoke old key in TwelveData dashboard
-- Generate new key
+**Status:** DELETED from tracked files (remains in git history)
+**User Action Required:** ✅ MUST ROTATE via TwelveData dashboard
+- Revoke old compromised key in TwelveData dashboard
+- Generate new API key
 - Set `TWELVEDATA_API_KEY` in Render
+- Redeploy backend
 
 ### 2. Telegram Bot Token (COMPROMISED)
 **Old Token:** [REDACTED - previously: 8638559471:...]  

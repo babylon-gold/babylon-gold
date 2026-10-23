@@ -210,16 +210,15 @@ User Action Required: YES
 
 Steps:
 1. Visit https://twelvedata.com/account/api-keys
-2. Select the current key (f09d6da7d9a54903bf348c5e935ec90d)
-3. Revoke or delete it
-4. Generate a new API key
-5. Copy the new key
-6. Go to Render dashboard (https://dashboard.render.com)
-7. Select babylon-gold-backend service
-8. Go to Environment tab
-9. Set TWELVEDATA_API_KEY = <new_key_here>
-10. Redeploy (Pull and deploy changes)
-11. Verify: Check backend logs for successful data load
+2. Find and revoke/delete the compromised key (was previously exposed in repository)
+3. Generate a new API key
+4. Copy the new key to a secure location
+5. Go to Render dashboard (https://dashboard.render.com)
+6. Select babylon-gold-backend service
+7. Go to Environment tab
+8. Set TWELVEDATA_API_KEY = <new_key_here>
+9. Redeploy (Pull and deploy changes)
+10. Verify: Check backend logs for successful data load
 ```
 
 ### Action 2: Rotate Telegram Bot Token [BLOCKING]

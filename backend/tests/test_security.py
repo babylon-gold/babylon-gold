@@ -14,36 +14,35 @@ client = TestClient(app)
 class TestAdminAuthenticationRequired:
     """Test that admin endpoints require authentication."""
 
-    def test_data_refresh_without_auth_returns_403(self):
-        """POST /admin/data/refresh without auth should return 403."""
+    def test_data_refresh_without_auth_returns_401(self):
+        """POST /admin/data/refresh without auth should return 401."""
         response = client.post("/api/v1/admin/data/refresh")
-        assert response.status_code == 403
-        assert "credentials" in response.json().get("detail", "").lower()
+        assert response.status_code == 401
 
-    def test_scheduler_start_without_auth_returns_403(self):
-        """POST /admin/scheduler/start without auth should return 403."""
+    def test_scheduler_start_without_auth_returns_401(self):
+        """POST /admin/scheduler/start without auth should return 401."""
         response = client.post("/api/v1/admin/scheduler/start")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
-    def test_scheduler_stop_without_auth_returns_403(self):
-        """POST /admin/scheduler/stop without auth should return 403."""
+    def test_scheduler_stop_without_auth_returns_401(self):
+        """POST /admin/scheduler/stop without auth should return 401."""
         response = client.post("/api/v1/admin/scheduler/stop")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
-    def test_scheduler_status_without_auth_returns_403(self):
-        """GET /admin/scheduler/status without auth should return 403."""
+    def test_scheduler_status_without_auth_returns_401(self):
+        """GET /admin/scheduler/status without auth should return 401."""
         response = client.get("/api/v1/admin/scheduler/status")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
-    def test_health_detailed_without_auth_returns_403(self):
-        """GET /admin/system/health-detailed without auth should return 403."""
+    def test_health_detailed_without_auth_returns_401(self):
+        """GET /admin/system/health-detailed without auth should return 401."""
         response = client.get("/api/v1/admin/system/health-detailed")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
-    def test_data_refresh_status_without_auth_returns_403(self):
-        """GET /admin/data/refresh-status without auth should return 403."""
+    def test_data_refresh_status_without_auth_returns_401(self):
+        """GET /admin/data/refresh-status without auth should return 401."""
         response = client.get("/api/v1/admin/data/refresh-status")
-        assert response.status_code == 403
+        assert response.status_code == 401
 
 
 class TestAdminAuthenticationValid:
@@ -53,10 +52,10 @@ class TestAdminAuthenticationValid:
         """GET /admin/scheduler/status with valid auth should return 200."""
         headers = {"Authorization": f"Bearer test_admin_key_12345"}
         response = client.get("/api/v1/admin/scheduler/status", headers=headers)
-        # Should not return 403 (auth check passes)
-        assert response.status_code != 403
-        # Should return 200 or 400 (valid request, maybe scheduler not running)
-        assert response.status_code in [200, 400, 500]
+        # Authentication should pass (not 401 or 403)
+        assert response.status_code not in [401, 403], f"Auth failed: {response.status_code}"
+        # Should return 200 (successful request)
+        assert response.status_code == 200
 
 
 class TestAdminAuthenticationInvalid:
@@ -66,14 +65,13 @@ class TestAdminAuthenticationInvalid:
         """GET /admin/scheduler/status with invalid token should return 403."""
         headers = {"Authorization": "Bearer wrong_key"}
         response = client.get("/api/v1/admin/scheduler/status", headers=headers)
-        assert response.status_code == 403
-        assert "credentials" in response.json().get("detail", "").lower()
+        assert response.status_code == 403, f"Expected 403, got {response.status_code}"
 
-    def test_scheduler_status_with_no_bearer_returns_403(self):
-        """GET /admin/scheduler/status without Bearer scheme should return 403."""
+    def test_scheduler_status_with_no_bearer_returns_401(self):
+        """GET /admin/scheduler/status without Bearer scheme should return 401."""
         headers = {"Authorization": "test_admin_key_12345"}
         response = client.get("/api/v1/admin/scheduler/status", headers=headers)
-        assert response.status_code == 403
+        assert response.status_code == 401, f"Expected 401 for malformed auth, got {response.status_code}"
 
 
 class TestAnalysisEndpointNoUncontrolledNotifications:
@@ -82,16 +80,16 @@ class TestAnalysisEndpointNoUncontrolledNotifications:
     def test_analysis_endpoint_returns_200(self):
         """GET /analysis should return 200 without authentication."""
         response = client.get("/api/v1/analysis?timeframe=15min")
-        # Should be accessible without auth (public data)
-        assert response.status_code in [200, 404, 500]  # 404 if no data, 500 if error
+        # Should be accessible without auth (public data endpoint)
+        assert response.status_code == 200, f"Analysis endpoint failed: {response.status_code}"
 
     def test_analysis_endpoint_returns_json(self):
         """GET /analysis should return JSON response."""
         response = client.get("/api/v1/analysis?timeframe=15min")
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, dict)
-            assert "timeframe" in data
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+        data = response.json()
+        assert isinstance(data, dict), f"Expected dict, got {type(data)}"
+        assert "timeframe" in data, f"Missing 'timeframe' in response: {data.keys()}"
 
 
 class TestPublicEndpointsNoAuth:
@@ -100,8 +98,8 @@ class TestPublicEndpointsNoAuth:
     def test_health_endpoint_without_auth_returns_200(self):
         """GET /health should be accessible without auth."""
         response = client.get("/api/v1/health")
-        # Health check should always work (or return proper error)
-        assert response.status_code in [200, 500]  # Depends on system state
+        # Health check should return 200
+        assert response.status_code == 200, f"Health endpoint failed: {response.status_code}"
 
     def test_root_endpoint_without_auth_returns_200(self):
         """GET / should be accessible without auth."""
@@ -116,9 +114,8 @@ class TestSecurityHeaders:
     def test_cors_headers_present(self):
         """Response should have CORS headers."""
         response = client.get("/api/v1/health")
-        # FastAPI with CORSMiddleware should add these
-        assert response.status_code in [200, 500]
-        # Note: Headers vary based on request origin
+        # Public endpoint should return 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
 
 
 def test_api_key_txt_not_in_repo():
