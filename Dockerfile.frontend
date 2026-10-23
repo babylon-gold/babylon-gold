@@ -14,6 +14,9 @@ RUN npm ci
 # Copy source code
 COPY frontend/ .
 
+# Ensure public directory exists (even if empty)
+RUN mkdir -p /app/public
+
 # Build the application with API URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
@@ -27,7 +30,7 @@ WORKDIR /app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 3000
@@ -35,9 +38,9 @@ EXPOSE 3000
 # Environment variables
 ENV NODE_ENV=production
 
-# Health check - verify server responds on port 3000
+# Health check - verify Next.js server responds with 200
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/', (r) => {if (r.statusCode !== 200 && r.statusCode !== 404) throw new Error(r.statusCode)})" || exit 1
+    CMD node -e "require('http').get('http://localhost:3000/', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 # Run the application
 CMD ["npm", "start"]
