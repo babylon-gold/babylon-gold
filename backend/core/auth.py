@@ -2,18 +2,20 @@
 import os
 import hmac
 import hashlib
+import logging
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
-# Get admin API key from environment
-ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
-if not ADMIN_API_KEY:
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.warning("ADMIN_API_KEY environment variable not set. Admin endpoints require valid token.")
+def _get_admin_api_key() -> str:
+    """Get admin API key from environment (dynamic, testable)."""
+    key = os.getenv("ADMIN_API_KEY")
+    if not key:
+        logger.warning("ADMIN_API_KEY environment variable not set. Admin endpoints require valid token.")
+    return key
 
 
 def _constant_time_compare(a: str, b: str) -> bool:
@@ -33,14 +35,16 @@ async def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends
         # admin_token is verified
     ```
     """
-    if not ADMIN_API_KEY:
+    admin_api_key = _get_admin_api_key()
+
+    if not admin_api_key:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin authentication not configured",
         )
 
     # Use constant-time comparison to prevent timing attacks
-    if not _constant_time_compare(credentials.credentials, ADMIN_API_KEY):
+    if not _constant_time_compare(credentials.credentials, admin_api_key):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid credentials",

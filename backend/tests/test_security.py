@@ -3,10 +3,10 @@ import pytest
 from fastapi.testclient import TestClient
 import os
 
-# Mock the ADMIN_API_KEY environment variable
-os.environ["ADMIN_API_KEY"] = "test_admin_key_12345"
-
 from main import app
+
+# Set test key after app import (auth now reads dynamically)
+os.environ["ADMIN_API_KEY"] = "test_admin_key_12345"
 
 client = TestClient(app)
 

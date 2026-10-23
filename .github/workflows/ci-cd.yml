@@ -49,7 +49,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'frontend/package-lock.json'
 
@@ -58,10 +58,15 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Run TypeScript check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
       - name: Run linter
         run: |
           cd frontend
-          npm run lint 2>/dev/null || echo "Linter check completed"
+          npm run lint
 
       - name: Build project
         run: |
@@ -141,13 +146,23 @@ jobs:
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}
         run: |
-          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
-            curl --no-buffer -X POST "$RENDER_DEPLOY_HOOK"
-            echo "Deployment triggered for staging backend"
-          else
-            echo "RENDER_DEPLOY_HOOK_STAGING not configured"
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "ERROR: RENDER_DEPLOY_HOOK_STAGING not configured in GitHub Secrets"
+            exit 1
           fi
-        continue-on-error: true
+
+          response=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "Deployment response: $body"
+
+          if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 201 ]; then
+            echo "ERROR: Deployment failed with HTTP $http_code"
+            exit 1
+          fi
+
+          echo "Deployment triggered successfully for staging backend"
 
   # Deploy to production (on main branch)
   deploy-production:
@@ -170,10 +185,20 @@ jobs:
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}
         run: |
-          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
-            curl --no-buffer -X POST "$RENDER_DEPLOY_HOOK"
-            echo "Deployment triggered for production backend"
-          else
-            echo "RENDER_DEPLOY_HOOK_PRODUCTION not configured"
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "ERROR: RENDER_DEPLOY_HOOK_PRODUCTION not configured in GitHub Secrets"
+            exit 1
           fi
-        continue-on-error: true
+
+          response=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "Deployment response: $body"
+
+          if [ "$http_code" -ne 200 ] && [ "$http_code" -ne 201 ]; then
+            echo "ERROR: Production deployment failed with HTTP $http_code"
+            exit 1
+          fi
+
+          echo "Production deployment triggered successfully"
